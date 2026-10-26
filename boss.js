@@ -75,33 +75,75 @@ function getMention() {
   return '@everyone';
 }
 
+const outposts = [
+  { name: 'Bunker', x: 1057, y: 1017 },
+  { name: 'North Entrance', x: 1057, y: 1021 },
+  { name: 'Fort Pastor', x: 1029, y: 1003 },
+  { name: 'Dogg\'s Stockade', x: 1012, y: 1019 },
+  { name: 'Camp Valcrest', x: 1032, y: 985 },
+  { name: 'Precinct 13', x: 1005, y: 985 },
+  { name: 'Nastya\'s Holdout', x: 1000, y: 1000 },
+  { name: 'Ground Zero', x: 1054, y: 987 }
+];
+
+function getDirections(x, y) {
+  const sorted = outposts.map(op => {
+    const dx = x - op.x;
+    const dy = y - op.y;
+    const dist = Math.abs(dx) + Math.abs(dy);
+    let route = '';
+    if (dx < 0) route += Math.abs(dx) + 'L';
+    if (dx > 0) route += dx + 'R';
+    if (dy < 0) route += Math.abs(dy) + 'D';
+    if (dy > 0) route += dy + 'U';
+    if (!route) route = 'No';
+    return { name: op.name, dist, text: route + ' from ' + op.name + '.' };
+  }).sort((a, b) => a.dist - b.dist);
+
+  return sorted.slice(0, 2).map(s => s.text).join('\n');
+}
+
+function getMapImageUrl(x, y) {
+  return 'https://deadfrontier.info/map/Fairview_' + x + 'x' + y + '.png';
+}
+
 function createEmbed(boss, entry) {
   const isPumpkin = /pumpkin/i.test(boss);
   const color = isPumpkin ? 0xff7518 : 0x9b59b6;
+  const primaryCoord = (entry.locations && entry.locations[0]) || [1050, 986];
+  const px = primaryCoord[0];
+  const py = primaryCoord[1];
+  
   const places = (entry.locations || [])
     .slice(0, 4)
-    .map(pair => `\`${pair[0]} x ${pair[1]}\``)
+    .map(pair => '`' + pair[0] + ' x ' + pair[1] + '`')
     .join('  •  ') || 'Desconhecido';
+    
   const label = String(entry.special_enemy_type).replace(/<br\s*\/?>/gi, ', ');
   const end = Number(entry.end_time);
+  const directions = getDirections(px, py);
 
   const fields = [
     { name: '📍 Coordenadas', value: places, inline: true },
-    { name: '🧟 Inimigo', value: label, inline: true }
+    { name: '🧟 Inimigo', value: label, inline: true },
+    { name: '🧭 Rotas / Distâncias', value: directions, inline: false }
   ];
   if (end) {
-    fields.push({ name: '⏳ Tempo Restante', value: `<t:${end}:R> (<t:${end}:T>)`, inline: false });
+    fields.push({ name: '⏳ Tempo Restante', value: '<t:' + end + ':R> (<t:' + end + ':T>)', inline: false });
   }
-  fields.push({ name: '🗺️ Mapa ao Vivo', value: '[Abrir Mapa no DFProfiler](https://www.dfprofiler.com/bossmap)', inline: false });
+  fields.push({ name: '🗺️ Mapa Interativo', value: '[Abrir Mapa no DFProfiler](https://www.dfprofiler.com/bossmap)', inline: false });
 
   const spTime = new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
   return {
-    title: isPumpkin ? `🎃 ${boss.toUpperCase()} DETECTADA!` : `🚨 ${boss.toUpperCase()} DETECTADO!`,
-    description: `**Atenção ${getMention()}!** Chefe especial ativo no mapa agora!`,
+    title: isPumpkin ? '🎃 ' + boss.toUpperCase() + ' DETECTADA!' : '🚨 ' + boss.toUpperCase() + ' DETECTADO!',
+    description: '**Atenção ' + getMention() + '!** Chefe especial ativo no mapa agora!',
     color,
     fields,
-    footer: { text: `DFProfiler Boss Alert • Detectado às ${spTime} (Brasília)` },
+    image: {
+      url: getMapImageUrl(px, py)
+    },
+    footer: { text: 'DFProfiler Boss Alert • Detectado às ' + spTime + ' (Brasília)' },
     timestamp: new Date().toISOString()
   };
 }
@@ -162,8 +204,14 @@ async function main() {
       locations: [[1050, 986]],
       end_time: Math.floor(Date.now() / 1000) + 1800
     };
-    await publish('Pumpkin Queen', testEntry);
-    console.log('Alerta de teste enviado com sucesso!');
+    if (preview) {
+      console.log('--- PREVIEW DO TESTE ---');
+      console.log(JSON.stringify(createEmbed('Pumpkin Queen', testEntry), null, 2));
+    } else {
+      await publish('Pumpkin Queen', testEntry);
+      console.log('Alerta de teste enviado com sucesso!');
+    }
+    if (!loop) return;
   }
   
   if (loop) {
