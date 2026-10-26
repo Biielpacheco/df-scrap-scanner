@@ -274,7 +274,7 @@ async function scan(state) {
   if (Date.now() < nextAllowed) return;
   let rows;
   try {
-    if (once || loop) {
+    if (loop) {
       rows = await collectOne(state);
     } else {
       console.log('Consultando o mercado...');
