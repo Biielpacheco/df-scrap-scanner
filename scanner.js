@@ -145,7 +145,7 @@ function stamp(rows, state) {
     row.seen = seen[row.tradeId];
   }
   state.seen = seen;
-  if (once) state.listings = rows;
+  state.listings = rows;
 }
 
 function cheapest(rows, kind, singles) {
@@ -284,11 +284,14 @@ async function scan(state) {
   stamp(rows, state);
   const rare = 0xf1c40f;
   const uncommon = 0x2ecc71;
+  const common = 0x95a5a6;
   const embeds = [
-    section('Top Cheapest Rare Metal Scrap', cheapest(rows, 'rare', false), rare),
-    section('Top Cheapest Rare Metal Scrap Single', cheapest(rows, 'rare', true), rare),
-    section('Top Cheapest Uncommon Metal Scrap', cheapest(rows, 'uncommon', false), uncommon),
-    section('Top Cheapest Uncommon Metal Scrap Single', cheapest(rows, 'uncommon', true), uncommon)
+    section('Top Cheapest Rare Metal Scrap:', cheapest(rows, 'rare', false), rare),
+    section('Top Cheapest Rare Metal Scrap Single:', cheapest(rows, 'rare', true), rare),
+    section('Top Cheapest Uncommon Metal Scrap:', cheapest(rows, 'uncommon', false), uncommon),
+    section('Top Cheapest Uncommon Metal Scrap Single:', cheapest(rows, 'uncommon', true), uncommon),
+    section('Top Cheapest Metal Scrap:', cheapest(rows, 'common', false), common),
+    section('Top Cheapest Metal Scrap Single:', cheapest(rows, 'common', true), common)
   ];
   if (preview) {
     for (const embed of embeds) {

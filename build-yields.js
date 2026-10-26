@@ -29,6 +29,8 @@ function parseDismantle(raw) {
   if (name === 'rare metal scrap') return { kind: 'rare', count };
   if (name === 'uncommon metal bar') return { kind: 'uncommon', count: 3 * count };
   if (name === 'uncommon metal scrap') return { kind: 'uncommon', count };
+  if (name === 'metal bar') return { kind: 'common', count: 3 * count };
+  if (name === 'metal scrap') return { kind: 'common', count };
   return null;
 }
 

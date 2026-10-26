@@ -1,4 +1,48 @@
 {
+  "Fire Poker": {
+    "kind": "common",
+    "count": 1
+  },
+  "Hunting Knife": {
+    "kind": "common",
+    "count": 1
+  },
+  "Golf Club": {
+    "kind": "common",
+    "count": 1
+  },
+  "Chef Knife": {
+    "kind": "common",
+    "count": 1
+  },
+  "Fire Axe": {
+    "kind": "common",
+    "count": 1
+  },
+  "Combat Knife": {
+    "kind": "common",
+    "count": 1
+  },
+  "Iron Pipe": {
+    "kind": "common",
+    "count": 2
+  },
+  "Bowie Knife": {
+    "kind": "common",
+    "count": 1
+  },
+  "Razor": {
+    "kind": "common",
+    "count": 1
+  },
+  "Crowbar": {
+    "kind": "common",
+    "count": 3
+  },
+  "Scalpel": {
+    "kind": "common",
+    "count": 1
+  },
   "Kris": {
     "kind": "uncommon",
     "count": 1
@@ -87,6 +131,18 @@
     "kind": "rare",
     "count": 1
   },
+  "ECO CS-20V": {
+    "kind": "common",
+    "count": 1
+  },
+  "ECO HC-150": {
+    "kind": "common",
+    "count": 1
+  },
+  "Dilmar PS": {
+    "kind": "common",
+    "count": 1
+  },
   "Ronan Pro": {
     "kind": "uncommon",
     "count": 1
@@ -114,6 +170,54 @@
   "Goretooth 44G": {
     "kind": "rare",
     "count": 2
+  },
+  "Beta Tomcat (Starter)": {
+    "kind": "common",
+    "count": 1
+  },
+  "Beta Tomcat": {
+    "kind": "common",
+    "count": 1
+  },
+  "Williams PPK": {
+    "kind": "common",
+    "count": 1
+  },
+  "Gerring HP": {
+    "kind": "common",
+    "count": 1
+  },
+  "Fifty-Seven": {
+    "kind": "common",
+    "count": 1
+  },
+  "Lock 19": {
+    "kind": "common",
+    "count": 1
+  },
+  "Kolt Python": {
+    "kind": "common",
+    "count": 1
+  },
+  "Beta 8000": {
+    "kind": "common",
+    "count": 1
+  },
+  "CK 75": {
+    "kind": "common",
+    "count": 1
+  },
+  "Luger": {
+    "kind": "common",
+    "count": 1
+  },
+  "Lock 17": {
+    "kind": "common",
+    "count": 1
+  },
+  "Webster 1942": {
+    "kind": "common",
+    "count": 1
   },
   "Lock 25": {
     "kind": "uncommon",
@@ -179,6 +283,38 @@
     "kind": "rare",
     "count": 2
   },
+  "Beta CX4": {
+    "kind": "common",
+    "count": 1
+  },
+  "Beta RX4": {
+    "kind": "common",
+    "count": 1
+  },
+  "Mini-41": {
+    "kind": "common",
+    "count": 1
+  },
+  "SL8": {
+    "kind": "common",
+    "count": 1
+  },
+  "Henryfield": {
+    "kind": "common",
+    "count": 1
+  },
+  "M24": {
+    "kind": "common",
+    "count": 1
+  },
+  "M1 Garand": {
+    "kind": "common",
+    "count": 1
+  },
+  "Chesterfield": {
+    "kind": "common",
+    "count": 1
+  },
   "Glacial Warfare": {
     "kind": "uncommon",
     "count": 1
@@ -231,6 +367,22 @@
     "kind": "rare",
     "count": 1
   },
+  "M16": {
+    "kind": "common",
+    "count": 1
+  },
+  "FM FNC": {
+    "kind": "common",
+    "count": 1
+  },
+  "SA80": {
+    "kind": "common",
+    "count": 1
+  },
+  "Mesa ACR": {
+    "kind": "common",
+    "count": 1
+  },
   "Stell AUG": {
     "kind": "uncommon",
     "count": 1
@@ -278,6 +430,34 @@
   "Hammerhead 47": {
     "kind": "rare",
     "count": 2
+  },
+  "Skorpion": {
+    "kind": "common",
+    "count": 1
+  },
+  "UZI": {
+    "kind": "common",
+    "count": 1
+  },
+  "FM P90": {
+    "kind": "common",
+    "count": 1
+  },
+  "MP5": {
+    "kind": "common",
+    "count": 1
+  },
+  "PP-19": {
+    "kind": "common",
+    "count": 1
+  },
+  "PP90": {
+    "kind": "common",
+    "count": 1
+  },
+  "Gramm M11": {
+    "kind": "common",
+    "count": 1
   },
   "MP40": {
     "kind": "uncommon",
@@ -351,6 +531,34 @@
     "kind": "rare",
     "count": 1
   },
+  "Mancini M1": {
+    "kind": "common",
+    "count": 1
+  },
+  "Highlander": {
+    "kind": "common",
+    "count": 1
+  },
+  "Washington 870": {
+    "kind": "common",
+    "count": 1
+  },
+  "Washington 1100": {
+    "kind": "common",
+    "count": 1
+  },
+  "Chester 1300": {
+    "kind": "common",
+    "count": 1
+  },
+  "WALL 500": {
+    "kind": "common",
+    "count": 1
+  },
+  "Sega-20": {
+    "kind": "common",
+    "count": 1
+  },
   "SPSA 12": {
     "kind": "uncommon",
     "count": 1
@@ -390,6 +598,22 @@
   "Jackhammer 10G": {
     "kind": "rare",
     "count": 3
+  },
+  "M79": {
+    "kind": "common",
+    "count": 1
+  },
+  "HK69": {
+    "kind": "common",
+    "count": 1
+  },
+  "RGM40": {
+    "kind": "common",
+    "count": 1
+  },
+  "GM94": {
+    "kind": "common",
+    "count": 1
   },
   "China Lake": {
     "kind": "uncommon",
