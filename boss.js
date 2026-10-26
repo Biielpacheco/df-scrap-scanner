@@ -103,8 +103,15 @@ function getDirections(x, y) {
   return sorted.slice(0, 2).map(s => s.text).join('\n');
 }
 
+const updatedMapsPath = path.join(root, 'updated-maps.json');
+const updatedMaps = fs.existsSync(updatedMapsPath) ? new Set(JSON.parse(fs.readFileSync(updatedMapsPath, 'utf8'))) : new Set();
+
 function getMapImageUrl(x, y) {
-  return 'https://deadfrontier.info/map/Fairview_' + x + 'x' + y + '.png';
+  const coord = x + 'x' + y;
+  if (updatedMaps.has(coord)) {
+    return 'https://raw.githubusercontent.com/luskrinha1/df-scrap-scanner/main/maps/Fairview_' + coord + '.webp';
+  }
+  return 'https://deadfrontier.info/map/Fairview_' + coord + '.png';
 }
 
 function createEmbed(boss, entry) {
