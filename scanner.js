@@ -186,7 +186,10 @@ async function deleteMessage(id) {
 async function rememberMessage(id) {
   const token = process.env.GITHUB_TOKEN;
   const repo = process.env.GITHUB_REPOSITORY;
-  if (!token || !repo || !id) return;
+  if (!token || !repo || !id) {
+    console.log('Número da mensagem ficou só nesta execução.');
+    return;
+  }
   const api = 'https://api.github.com/repos/' + repo + '/contents/message-id.txt';
   const headers = {
     Authorization: 'Bearer ' + token,
@@ -205,11 +208,12 @@ async function rememberMessage(id) {
     content: Buffer.from(id + '\n').toString('base64')
   };
   if (sha) body.sha = sha;
-  await fetch(api, {
+  const saved = await fetch(api, {
     method: 'PUT',
     headers: { ...headers, 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
   });
+  console.log(saved.ok ? 'Número da mensagem guardado.' : 'Não guardei o número da mensagem.');
 }
 
 async function publish(embeds, state) {
@@ -224,8 +228,14 @@ async function publish(embeds, state) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-    if (edit.ok) return;
-    await deleteMessage(state.messageId);
+    if (edit.ok) {
+      await rememberMessage(state.messageId);
+      return;
+    }
+    if (edit.status !== 404) {
+      console.log('Não consegui editar a mensagem. Não vou mandar outra.');
+      return;
+    }
     state.messageId = '';
   }
   const created = await fetch(webhookUrl('', true), {

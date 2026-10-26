@@ -32,5 +32,6 @@ jobs:
       - name: Consultar o mercado
         env:
           WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SCAN_MINUTES: '350'
         run: node scanner.js --loop
