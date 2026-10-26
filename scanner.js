@@ -93,7 +93,7 @@ async function searchCategory(category) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      'User-Agent': 'df-scrap-scanner'
+      'User-Agent': 'CappanCrunch'
     },
     body
   });
