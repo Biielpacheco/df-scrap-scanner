@@ -171,11 +171,45 @@ function section(title, rows, color) {
   };
 }
 
-function webhookEndpoint(extra) {
+function webhookUrl(extra, wait) {
   const url = new URL(config.webhookUrl.trim());
   if (extra) url.pathname = url.pathname.replace(/\/$/, '') + extra;
-  url.searchParams.set('wait', 'true');
+  if (wait) url.searchParams.set('wait', 'true');
   return url;
+}
+
+async function deleteMessage(id) {
+  if (!id) return;
+  await fetch(webhookUrl('/messages/' + id, false), { method: 'DELETE' });
+}
+
+async function rememberMessage(id) {
+  const token = process.env.GITHUB_TOKEN;
+  const repo = process.env.GITHUB_REPOSITORY;
+  if (!token || !repo || !id) return;
+  const api = 'https://api.github.com/repos/' + repo + '/contents/message-id.txt';
+  const headers = {
+    Authorization: 'Bearer ' + token,
+    Accept: 'application/vnd.github+json'
+  };
+  let sha = '';
+  const current = await fetch(api, { headers });
+  if (current.ok) {
+    const saved = await current.json();
+    const text = Buffer.from(saved.content, 'base64').toString().trim();
+    if (text === id) return;
+    sha = saved.sha;
+  }
+  const body = {
+    message: 'Keep the Discord message id',
+    content: Buffer.from(id + '\n').toString('base64')
+  };
+  if (sha) body.sha = sha;
+  await fetch(api, {
+    method: 'PUT',
+    headers: { ...headers, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
 }
 
 async function publish(embeds, state) {
@@ -185,15 +219,16 @@ async function publish(embeds, state) {
     embeds
   };
   if (state.messageId) {
-    const edit = await fetch(webhookEndpoint('/messages/' + state.messageId), {
+    const edit = await fetch(webhookUrl('/messages/' + state.messageId, false), {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
     if (edit.ok) return;
+    await deleteMessage(state.messageId);
     state.messageId = '';
   }
-  const created = await fetch(webhookEndpoint(''), {
+  const created = await fetch(webhookUrl('', true), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -203,6 +238,7 @@ async function publish(embeds, state) {
     throw new Error('Discord recusou o webhook.');
   }
   state.messageId = body.id;
+  await rememberMessage(body.id);
 }
 
 let nextAllowed = 0;
@@ -272,6 +308,11 @@ async function main() {
     process.exit(1);
   }
   const state = loadState();
+  const idFile = path.join(root, 'message-id.txt');
+  if (fs.existsSync(idFile)) {
+    const savedId = fs.readFileSync(idFile, 'utf8').trim();
+    if (savedId) state.messageId = savedId;
+  }
   nextAllowed = Number(state.nextAllowed) || 0;
   if (Date.now() < nextAllowed) {
     const minutes = Math.ceil((nextAllowed - Date.now()) / 60000);
