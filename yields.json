@@ -1,0 +1,478 @@
+{
+  "Kris": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "Wood Axe": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "Trench Knife": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "Machete": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "K9": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "Sabre": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "Kukri": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "Sledge Hammer": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "Golden Sledge Hammer": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "Grizzly Knife": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "BM14 Survival": {
+    "kind": "uncommon",
+    "count": 2
+  },
+  "BM14 Savage": {
+    "kind": "rare",
+    "count": 1
+  },
+  "Battle Axe": {
+    "kind": "uncommon",
+    "count": 2
+  },
+  "Katana": {
+    "kind": "uncommon",
+    "count": 2
+  },
+  "Wakizashi": {
+    "kind": "uncommon",
+    "count": 6
+  },
+  "Nodachi": {
+    "kind": "uncommon",
+    "count": 6
+  },
+  "Noble Nodachi": {
+    "kind": "rare",
+    "count": 1
+  },
+  "Spiker": {
+    "kind": "rare",
+    "count": 1
+  },
+  "Piercer": {
+    "kind": "rare",
+    "count": 1
+  },
+  "Dual Blade": {
+    "kind": "rare",
+    "count": 2
+  },
+  "Bone Cleaver": {
+    "kind": "rare",
+    "count": 2
+  },
+  "Titanium Blades": {
+    "kind": "rare",
+    "count": 1
+  },
+  "Ronan Pro": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "STEEL MS800": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "Grinder": {
+    "kind": "uncommon",
+    "count": 3
+  },
+  "Steel 090": {
+    "kind": "uncommon",
+    "count": 6
+  },
+  "Ripsaw G12": {
+    "kind": "rare",
+    "count": 1
+  },
+  "Mutilator G12": {
+    "kind": "rare",
+    "count": 3
+  },
+  "Goretooth 44G": {
+    "kind": "rare",
+    "count": 2
+  },
+  "Lock 25": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "CK 99": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "Kolt Anaconda": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "SIC Apollo": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "USP": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "SW 500": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "CK 97B": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "Desert Fox": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "Alpha Bull": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "Thunder 12": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "475 Magnum": {
+    "kind": "uncommon",
+    "count": 6
+  },
+  "ASH 12": {
+    "kind": "uncommon",
+    "count": 6
+  },
+  "Mirage S8": {
+    "kind": "rare",
+    "count": 1
+  },
+  "Greyhawk 55": {
+    "kind": "rare",
+    "count": 1
+  },
+  "Daystar 55": {
+    "kind": "rare",
+    "count": 2
+  },
+  "DoubleShot AAX": {
+    "kind": "rare",
+    "count": 2
+  },
+  "Glacial Warfare": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "M21": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "MSG-9": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "Alpha Judge": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "SIC 550": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "Hawk OP96": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "Dragon SVD": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "M82A2": {
+    "kind": "uncommon",
+    "count": 3
+  },
+  "VSS Vintorez": {
+    "kind": "uncommon",
+    "count": 3
+  },
+  "577 Rex": {
+    "kind": "uncommon",
+    "count": 6
+  },
+  "Ironsight 33-F": {
+    "kind": "rare",
+    "count": 1
+  },
+  "Worg Carbine": {
+    "kind": "rare",
+    "count": 2
+  },
+  "Rebellion": {
+    "kind": "rare",
+    "count": 1
+  },
+  "Stell AUG": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "XM8": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "G3": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "FM FAL": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "AK 47": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "M4": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "AS-VAL": {
+    "kind": "uncommon",
+    "count": 3
+  },
+  "AS-VAL Ghost": {
+    "kind": "rare",
+    "count": 1
+  },
+  "Biowolf 127": {
+    "kind": "uncommon",
+    "count": 6
+  },
+  "EBR-12": {
+    "kind": "rare",
+    "count": 1
+  },
+  "Sentinel S19": {
+    "kind": "rare",
+    "count": 1
+  },
+  "Hammerhead 47": {
+    "kind": "rare",
+    "count": 2
+  },
+  "MP40": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "UMP": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "Talon 40": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "Chicago Typewriter": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "K-50M": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "PPSH-41": {
+    "kind": "uncommon",
+    "count": 3
+  },
+  "Criss Victor": {
+    "kind": "uncommon",
+    "count": 6
+  },
+  "Uziel 14mm": {
+    "kind": "rare",
+    "count": 1
+  },
+  "Street Dog 99": {
+    "kind": "rare",
+    "count": 2
+  },
+  "BAR": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "FM Mitrail": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "FM MAG": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "M60": {
+    "kind": "uncommon",
+    "count": 6
+  },
+  "MG42": {
+    "kind": "rare",
+    "count": 1
+  },
+  "Vulcan": {
+    "kind": "uncommon",
+    "count": 3
+  },
+  "XMG 5200": {
+    "kind": "rare",
+    "count": 1
+  },
+  "SCAR 9000": {
+    "kind": "rare",
+    "count": 3
+  },
+  "Wraith Cannon (Unlimited Ammo)": {
+    "kind": "rare",
+    "count": 1
+  },
+  "SPSA 12": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "Mannberg 500": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "Triple Defender": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "Sweeper": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "VP-12": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "USAN-12": {
+    "kind": "uncommon",
+    "count": 3
+  },
+  "AA-12": {
+    "kind": "uncommon",
+    "count": 6
+  },
+  "Painshot 10": {
+    "kind": "rare",
+    "count": 1
+  },
+  "Ace Barrel GZ3": {
+    "kind": "rare",
+    "count": 2
+  },
+  "Jackhammer 10G": {
+    "kind": "rare",
+    "count": 3
+  },
+  "China Lake": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "RG6": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "Falcon-MM1": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "Type 87": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "MGL 6": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "XM25": {
+    "kind": "uncommon",
+    "count": 3
+  },
+  "PAW-20": {
+    "kind": "uncommon",
+    "count": 6
+  },
+  "Immolator AD": {
+    "kind": "rare",
+    "count": 1
+  },
+  "Junker 6": {
+    "kind": "rare",
+    "count": 2
+  },
+  "Incinerator FT-9": {
+    "kind": "rare",
+    "count": 1
+  },
+  "Flak Jacket": {
+    "kind": "uncommon",
+    "count": 1
+  },
+  "SN-42": {
+    "kind": "uncommon",
+    "count": 2
+  },
+  "IOTV Hard Plate": {
+    "kind": "uncommon",
+    "count": 3
+  },
+  "Reactive SLX": {
+    "kind": "uncommon",
+    "count": 3
+  },
+  "Reactive XT800": {
+    "kind": "uncommon",
+    "count": 2
+  },
+  "Raider Reactive": {
+    "kind": "uncommon",
+    "count": 3
+  },
+  "Exterminator Reactive XT": {
+    "kind": "uncommon",
+    "count": 6
+  },
+  "Bio Reactive": {
+    "kind": "rare",
+    "count": 1
+  },
+  "Vitalcore Reactive": {
+    "kind": "rare",
+    "count": 3
+  },
+  "Tatakau Reactive": {
+    "kind": "rare",
+    "count": 3
+  },
+  "Vengeance Guard": {
+    "kind": "rare",
+    "count": 1
+  }
+}

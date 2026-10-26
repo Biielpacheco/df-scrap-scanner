@@ -1,0 +1,6 @@
+{
+  "webhookUrl": "",
+  "location": "21",
+  "intervalMinutes": 5,
+  "lines": 10
+}

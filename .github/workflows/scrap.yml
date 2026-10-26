@@ -1,0 +1,28 @@
+name: Scrap Scanner
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: actions/cache@v4
+        with:
+          path: state.json
+          key: scrap-state-${{ github.run_id }}
+          restore-keys: |
+            scrap-state-
+
+      - name: Consultar o mercado
+        env:
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+        run: node scanner.js --once
