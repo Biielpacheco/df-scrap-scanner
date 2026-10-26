@@ -17,6 +17,7 @@ const bosses = (process.env.BOSSES || 'Pumpkin Queen')
 const statePath = path.join(root, 'boss-state.json');
 const preview = process.argv.includes('--preview');
 const loop = process.argv.includes('--loop');
+const test = process.argv.includes('--test');
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -140,6 +141,18 @@ async function main() {
     return;
   }
   const state = loadState();
+
+  if (test) {
+    console.log('Enviando alerta de teste para o Discord...');
+    const testEntry = {
+      event_id: 'test_' + Date.now(),
+      special_enemy_type: '1 x Pumpkin Queen (Teste de Configuração)',
+      locations: [[1050, 986]],
+      end_time: Math.floor(Date.now() / 1000) + 1800
+    };
+    await publish('Pumpkin Queen', testEntry);
+    console.log('Alerta de teste enviado com sucesso!');
+  }
   
   if (loop) {
     console.log('Iniciando Vigia Contínuo de Bosses (checagem a cada 45 segundos)...');
