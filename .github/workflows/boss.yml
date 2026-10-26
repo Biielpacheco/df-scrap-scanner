@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: '0 */6 * * *'
   workflow_dispatch:
+    inputs:
+      test:
+        description: 'Enviar alerta de teste imediato'
+        required: false
+        default: 'true'
 
 concurrency:
   group: boss-alert
@@ -30,6 +35,12 @@ jobs:
       - name: Monitorar Bosses em Tempo Real
         env:
           BOSS_WEBHOOK_URL: ${{ secrets.BOSS_WEBHOOK_URL || secrets.WEBHOOK_URL }}
-          BOSSES: ${{ vars.BOSSES || 'Pumpkin Queen' }}
+          BOSSES: ${{ vars.BOSSES || 'Pumpkin Queen,Pumpkin Tendril' }}
           SCAN_MINUTES: '350'
-        run: node boss.js --loop
+          IS_TEST: ${{ inputs.test }}
+        run: |
+          if [ "$IS_TEST" = "true" ]; then
+            node boss.js --loop --test
+          else
+            node boss.js --loop
+          fi
