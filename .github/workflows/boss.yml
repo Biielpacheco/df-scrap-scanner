@@ -35,6 +35,7 @@ jobs:
       - name: Monitorar Bosses em Tempo Real
         env:
           BOSS_WEBHOOK_URL: ${{ secrets.BOSS_WEBHOOK_URL || secrets.WEBHOOK_URL }}
+          BOSS_ROLE_ID: ${{ secrets.BOSS_ROLE_ID || vars.BOSS_ROLE_ID || '' }}
           BOSSES: ${{ vars.BOSSES || 'Pumpkin Queen,Pumpkin Tendril' }}
           SCAN_MINUTES: '350'
           IS_TEST: ${{ inputs.test }}
