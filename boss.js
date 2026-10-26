@@ -3,12 +3,17 @@ const path = require('path');
 
 const root = __dirname;
 const configPath = path.join(root, 'config.json');
-const config = { bossWebhookUrl: process.env.BOSS_WEBHOOK_URL || '' };
+const config = {
+  bossWebhookUrl: process.env.BOSS_WEBHOOK_URL || '',
+  bossRoleId: process.env.BOSS_ROLE_ID || ''
+};
 if (fs.existsSync(configPath)) {
   const saved = JSON.parse(fs.readFileSync(configPath, 'utf8'));
   if (saved.bossWebhookUrl) config.bossWebhookUrl = saved.bossWebhookUrl;
+  if (saved.bossRoleId) config.bossRoleId = saved.bossRoleId;
 }
 if (process.env.BOSS_WEBHOOK_URL) config.bossWebhookUrl = process.env.BOSS_WEBHOOK_URL;
+if (process.env.BOSS_ROLE_ID) config.bossRoleId = process.env.BOSS_ROLE_ID;
 
 const bosses = (process.env.BOSSES || 'Pumpkin Queen')
   .split(',')
@@ -64,6 +69,12 @@ async function loadMap() {
   return JSON.parse(text);
 }
 
+function getMention() {
+  const roleId = String(config.bossRoleId || '').trim();
+  if (roleId) return `<@&${roleId}>`;
+  return '@everyone';
+}
+
 function createEmbed(boss, entry) {
   const isPumpkin = /pumpkin/i.test(boss);
   const color = isPumpkin ? 0xff7518 : 0x9b59b6;
@@ -87,7 +98,7 @@ function createEmbed(boss, entry) {
 
   return {
     title: isPumpkin ? `🎃 ${boss.toUpperCase()} DETECTADA!` : `🚨 ${boss.toUpperCase()} DETECTADO!`,
-    description: `**Atenção @everyone!** Chefe especial ativo no mapa agora!`,
+    description: `**Atenção ${getMention()}!** Chefe especial ativo no mapa agora!`,
     color,
     fields,
     footer: { text: `DFProfiler Boss Alert • Detectado às ${spTime} (Brasília)` },
@@ -97,14 +108,15 @@ function createEmbed(boss, entry) {
 
 async function publish(boss, entry) {
   const embed = createEmbed(boss, entry);
+  const mention = getMention();
   const response = await fetch(config.bossWebhookUrl.trim(), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       username: 'Boss Alert',
-      content: '@everyone',
+      content: mention,
       embeds: [embed],
-      allowed_mentions: { parse: ['everyone'] }
+      allowed_mentions: { parse: ['roles', 'everyone'] }
     })
   });
   if (!response.ok) throw new Error('Discord recusou o webhook: ' + response.statusText);
