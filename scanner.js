@@ -81,21 +81,19 @@ function parseTrade(text) {
 
 async function searchCategory(category) {
   const body = new URLSearchParams({
-    hash: '',
-    pagetime: '',
     tradezone: String(config.location || '21'),
     searchname: '',
-    category,
-    profession: '',
     memID: '',
-    searchtype: 'buyinglistcategory',
-    search: 'trades'
+    profession: '',
+    category,
+    search: 'trades',
+    searchtype: 'buyinglistcategory'
   });
   const response = await fetch('https://fairview.deadfrontier.com/onlinezombiemmo/trade_search.php', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      'Referer': 'https://fairview.deadfrontier.com/onlinezombiemmo/index.php?page=35'
+      'User-Agent': 'df-scrap-scanner'
     },
     body
   });
@@ -230,7 +228,7 @@ async function scan(state) {
   if (Date.now() < nextAllowed) return;
   let rows;
   try {
-    if (once) {
+    if (once || loop) {
       rows = await collectOne(state);
     } else {
       console.log('Consultando o mercado...');
@@ -238,10 +236,10 @@ async function scan(state) {
     }
   } catch (error) {
     if (error.rate) {
-      nextAllowed = Date.now() + 15 * 60 * 1000;
+      nextAllowed = Date.now() + 60 * 1000;
       state.nextAllowed = nextAllowed;
       saveState(state);
-      console.log('Mercado pediu espera. Nova tentativa em 15 minutos. Deixa esta janela aberta.');
+      console.log('Consulta falhou. Nova tentativa em 60 segundos.');
       return;
     }
     console.log('Falhou: ' + error.message);
