@@ -141,7 +141,7 @@ function stamp(rows, state) {
   const now = Math.floor(Date.now() / 1000);
   const seen = {};
   for (const row of rows) {
-    seen[row.tradeId] = (state.seen && state.seen[row.tradeId]) || row.seen || now;
+    seen[row.tradeId] = row.seen || now;
     row.seen = seen[row.tradeId];
   }
   state.seen = seen;
@@ -255,7 +255,7 @@ async function collectOne(state) {
   const fresh = found.map(row => ({
     ...row,
     category,
-    seen: (state.seen && state.seen[row.tradeId]) || now
+    seen: now
   }));
   return kept.concat(fresh);
 }
