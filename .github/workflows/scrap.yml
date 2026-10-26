@@ -2,7 +2,7 @@ name: Scrap Scanner
 
 on:
   schedule:
-    - cron: '0 */6 * * *'
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 concurrency:
@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    timeout-minutes: 360
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
 
@@ -33,5 +33,4 @@ jobs:
         env:
           WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SCAN_MINUTES: '350'
-        run: node scanner.js --loop
+        run: node scanner.js --once
