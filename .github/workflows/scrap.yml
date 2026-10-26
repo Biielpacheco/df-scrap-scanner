@@ -2,12 +2,17 @@ name: Scrap Scanner
 
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '0 */6 * * *'
   workflow_dispatch:
+
+concurrency:
+  group: scrap-scanner
+  cancel-in-progress: false
 
 jobs:
   scan:
     runs-on: ubuntu-latest
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
 
@@ -25,4 +30,5 @@ jobs:
       - name: Consultar o mercado
         env:
           WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
-        run: node scanner.js --once
+          SCAN_MINUTES: '350'
+        run: node scanner.js --loop

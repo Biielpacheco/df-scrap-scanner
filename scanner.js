@@ -17,6 +17,7 @@ const yields = JSON.parse(fs.readFileSync(path.join(root, 'yields.json'), 'utf8'
 const statePath = path.join(root, 'state.json');
 const preview = process.argv.includes('--preview');
 const once = process.argv.includes('--once');
+const loop = process.argv.includes('--loop');
 
 const categories = [
   'weapon_melee',
@@ -65,28 +66,46 @@ function money(value) {
   return '$' + thousands + 'k';
 }
 
+function parseTrade(text) {
+  const data = {};
+  for (const pair of text.split('&')) {
+    if (!pair) continue;
+    const cut = pair.indexOf('=');
+    if (cut < 0) continue;
+    let value = pair.slice(cut + 1).replace(/\+/g, ' ');
+    try { value = decodeURIComponent(value); } catch (error) {}
+    data[pair.slice(0, cut)] = value;
+  }
+  return data;
+}
+
 async function searchCategory(category) {
   const body = new URLSearchParams({
+    hash: '',
+    pagetime: '',
+    tradezone: String(config.location || '21'),
+    searchname: '',
     category,
-    location: String(config.location || '21'),
-    term: ''
+    profession: '',
+    memID: '',
+    searchtype: 'buyinglistcategory',
+    search: 'trades'
   });
-  const response = await fetch('https://www.dfprofiler.com/newmarket/search', {
+  const response = await fetch('https://fairview.deadfrontier.com/onlinezombiemmo/trade_search.php', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      'X-Requested-With': 'XMLHttpRequest',
-      'Referer': 'https://www.dfprofiler.com/marketplace'
+      'Referer': 'https://fairview.deadfrontier.com/onlinezombiemmo/index.php?page=35'
     },
     body
   });
   const text = await response.text();
-  if (text.toLowerCase().includes('rate limited')) {
+  if (!response.ok || text.trim().startsWith('<') || /too many|rate limit|blocked/i.test(text.slice(0, 300))) {
     const error = new Error('rate');
     error.rate = true;
     throw error;
   }
-  const data = JSON.parse(text);
+  const data = parseTrade(text);
   const max = parseInt(data.tradelist_maxresults, 10) || 0;
   const rows = [];
   for (let index = 0; index < max; index++) {
@@ -261,6 +280,17 @@ async function main() {
     console.log('Ainda em espera. Tentativa em ' + minutes + ' minutos. Não roda outro scanner.');
   }
   const interval = Math.max(1, Number(config.intervalMinutes) || 3) * 60 * 1000;
+  if (loop) {
+    const minutes = Math.max(1, Number(process.env.SCAN_MINUTES) || 350);
+    const end = Date.now() + minutes * 60 * 1000;
+    while (Date.now() < end) {
+      const started = Date.now();
+      await scan(state);
+      const wait = 60000 - (Date.now() - started);
+      if (wait > 0 && Date.now() + wait < end) await sleep(wait);
+    }
+    return;
+  }
   await scan(state);
   if (preview || once) return;
   setInterval(() => {
