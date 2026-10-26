@@ -2,7 +2,7 @@ name: Boss Alert
 
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '0 */6 * * *'
   workflow_dispatch:
 
 concurrency:
@@ -12,7 +12,7 @@ concurrency:
 jobs:
   alert:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
 
@@ -27,7 +27,9 @@ jobs:
           restore-keys: |
             boss-state-
 
-      - name: Procurar a Pumpkin Queen
+      - name: Monitorar Bosses em Tempo Real
         env:
-          BOSS_WEBHOOK_URL: ${{ secrets.BOSS_WEBHOOK_URL }}
-        run: node boss.js
+          BOSS_WEBHOOK_URL: ${{ secrets.BOSS_WEBHOOK_URL || secrets.WEBHOOK_URL }}
+          BOSSES: ${{ vars.BOSSES || 'Pumpkin Queen' }}
+          SCAN_MINUTES: '350'
+        run: node boss.js --loop
