@@ -16,6 +16,11 @@ const bosses = (process.env.BOSSES || 'Pumpkin Queen')
   .filter(Boolean);
 const statePath = path.join(root, 'boss-state.json');
 const preview = process.argv.includes('--preview');
+const loop = process.argv.includes('--loop');
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 function loadState() {
   try {
@@ -58,42 +63,53 @@ async function loadMap() {
   return JSON.parse(text);
 }
 
-function message(boss, entry) {
+function createEmbed(boss, entry) {
+  const isPumpkin = /pumpkin/i.test(boss);
+  const color = isPumpkin ? 0xff7518 : 0x9b59b6;
   const places = (entry.locations || [])
     .slice(0, 4)
-    .map(pair => pair[0] + ' x ' + pair[1])
-    .join('\n');
+    .map(pair => `\`${pair[0]} x ${pair[1]}\``)
+    .join('  •  ') || 'Desconhecido';
   const label = String(entry.special_enemy_type).replace(/<br\s*\/?>/gi, ', ');
   const end = Number(entry.end_time);
-  return [
-    '**' + boss + ' Alert** @everyone',
-    label + ' apareceu',
-    places,
-    'https://www.dfprofiler.com/bossmap',
-    end ? 'Termina <t:' + end + ':R>' : ''
-  ].filter(Boolean).join('\n');
+
+  const fields = [
+    { name: '📍 Coordenadas', value: places, inline: true },
+    { name: '🧟 Inimigo', value: label, inline: true }
+  ];
+  if (end) {
+    fields.push({ name: '⏳ Tempo Restante', value: `<t:${end}:R> (<t:${end}:T>)`, inline: false });
+  }
+  fields.push({ name: '🗺️ Mapa ao Vivo', value: '[Abrir Mapa no DFProfiler](https://www.dfprofiler.com/bossmap)', inline: false });
+
+  const spTime = new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+  return {
+    title: isPumpkin ? `🎃 ${boss.toUpperCase()} DETECTADA!` : `🚨 ${boss.toUpperCase()} DETECTADO!`,
+    description: `**Atenção @everyone!** Chefe especial ativo no mapa agora!`,
+    color,
+    fields,
+    footer: { text: `DFProfiler Boss Alert • Detectado às ${spTime} (Brasília)` },
+    timestamp: new Date().toISOString()
+  };
 }
 
-async function publish(content) {
+async function publish(boss, entry) {
+  const embed = createEmbed(boss, entry);
   const response = await fetch(config.bossWebhookUrl.trim(), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       username: 'Boss Alert',
-      content,
+      content: '@everyone',
+      embeds: [embed],
       allowed_mentions: { parse: ['everyone'] }
     })
   });
-  if (!response.ok) throw new Error('Discord recusou o webhook.');
+  if (!response.ok) throw new Error('Discord recusou o webhook: ' + response.statusText);
 }
 
-async function main() {
-  const webhook = String(config.bossWebhookUrl || '').trim();
-  if (!preview && !/^https:\/\/(discord\.com|discordapp\.com)\/api\/webhooks\/\d+\//.test(webhook)) {
-    console.log('Falta o webhook do canal da Pumpkin Queen.');
-    return;
-  }
-  const state = loadState();
+async function checkBosses(state) {
   const data = await loadMap();
   const sent = new Set(state.sent);
   let posted = 0;
@@ -101,18 +117,50 @@ async function main() {
     if (!entry || entry.ended === '1') continue;
     const boss = wanted(entry);
     if (!boss || !entry.event_id || sent.has(entry.event_id)) continue;
-    const content = message(boss, entry);
+    
     if (preview) {
-      console.log(content);
+      console.log('--- ALERTA GERADO (PREVIEW) ---');
+      console.log(JSON.stringify(createEmbed(boss, entry), null, 2));
     } else {
-      await publish(content);
+      await publish(boss, entry);
     }
     sent.add(entry.event_id);
     posted += 1;
+    console.log(`[ALERTA ENVIADO] ${boss} (ID do Evento: ${entry.event_id})`);
   }
   state.sent = [...sent].slice(-50);
-  if (!preview) saveState(state);
-  console.log(posted ? 'Avisos enviados: ' + posted : 'Pumpkin Queen não está no mapa.');
+  if (!preview && posted > 0) saveState(state);
+  return posted;
+}
+
+async function main() {
+  const webhook = String(config.bossWebhookUrl || '').trim();
+  if (!preview && !/^https:\/\/(discord\.com|discordapp\.com)\/api\/webhooks\/\d+\//.test(webhook)) {
+    console.log('Falta o webhook do canal de boss (BOSS_WEBHOOK_URL).');
+    return;
+  }
+  const state = loadState();
+  
+  if (loop) {
+    console.log('Iniciando Vigia Contínuo de Bosses (checagem a cada 45 segundos)...');
+    const minutes = Math.max(1, Number(process.env.SCAN_MINUTES) || 350);
+    const end = Date.now() + minutes * 60 * 1000;
+    while (Date.now() < end) {
+      try {
+        const posted = await checkBosses(state);
+        if (posted > 0) {
+          console.log(`Alertas enviados neste ciclo: ${posted}`);
+        }
+      } catch (err) {
+        console.log('Erro ao consultar mapa de bosses: ' + err.message);
+      }
+      await sleep(45000);
+    }
+    return;
+  }
+  
+  const posted = await checkBosses(state);
+  console.log(posted ? 'Avisos enviados: ' + posted : 'Nenhum boss desejado ativo no mapa.');
 }
 
 main().catch(error => {
