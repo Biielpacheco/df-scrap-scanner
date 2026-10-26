@@ -3,11 +3,12 @@ const path = require('path');
 
 const root = __dirname;
 const configPath = path.join(root, 'config.json');
-const config = { webhookUrl: process.env.WEBHOOK_URL || '' };
+const config = { bossWebhookUrl: process.env.BOSS_WEBHOOK_URL || '' };
 if (fs.existsSync(configPath)) {
-  Object.assign(config, JSON.parse(fs.readFileSync(configPath, 'utf8')));
+  const saved = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+  if (saved.bossWebhookUrl) config.bossWebhookUrl = saved.bossWebhookUrl;
 }
-if (process.env.WEBHOOK_URL) config.webhookUrl = process.env.WEBHOOK_URL;
+if (process.env.BOSS_WEBHOOK_URL) config.bossWebhookUrl = process.env.BOSS_WEBHOOK_URL;
 
 const bosses = (process.env.BOSSES || 'Pumpkin Queen')
   .split(',')
@@ -74,7 +75,7 @@ function message(boss, entry) {
 }
 
 async function publish(content) {
-  const response = await fetch(config.webhookUrl.trim(), {
+  const response = await fetch(config.bossWebhookUrl.trim(), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -87,10 +88,10 @@ async function publish(content) {
 }
 
 async function main() {
-  const webhook = String(config.webhookUrl || '').trim();
+  const webhook = String(config.bossWebhookUrl || '').trim();
   if (!preview && !/^https:\/\/(discord\.com|discordapp\.com)\/api\/webhooks\/\d+\//.test(webhook)) {
-    console.log('Cola a URL do webhook em scrap-scanner/config.json e roda de novo.');
-    process.exit(1);
+    console.log('Falta o webhook do canal da Pumpkin Queen.');
+    return;
   }
   const state = loadState();
   const data = await loadMap();

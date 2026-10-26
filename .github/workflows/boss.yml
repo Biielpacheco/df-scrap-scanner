@@ -29,5 +29,5 @@ jobs:
 
       - name: Procurar a Pumpkin Queen
         env:
-          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+          BOSS_WEBHOOK_URL: ${{ secrets.BOSS_WEBHOOK_URL }}
         run: node boss.js
