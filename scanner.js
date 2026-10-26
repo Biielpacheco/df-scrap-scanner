@@ -303,6 +303,11 @@ async function scan(state) {
     section('Top Cheapest Metal Scrap:', cheapest(rows, 'common', false), common),
     section('Top Cheapest Metal Scrap Single:', cheapest(rows, 'common', true), common)
   ];
+  const spTime = new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  embeds[embeds.length - 1].footer = {
+    text: `🟢 Scanner Online • Última verificação: ${spTime} (Brasília)`
+  };
+  embeds[embeds.length - 1].timestamp = new Date().toISOString();
   if (preview) {
     for (const embed of embeds) {
       console.log('\n' + embed.title + '\n' + embed.description);
