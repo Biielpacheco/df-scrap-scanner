@@ -30,4 +30,4 @@ jobs:
       - name: Procurar a Pumpkin Queen
         env:
           BOSS_WEBHOOK_URL: ${{ secrets.BOSS_WEBHOOK_URL }}
-        run: node boss.js
+        run: node boss.js --loop
