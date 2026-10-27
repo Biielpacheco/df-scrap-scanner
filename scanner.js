@@ -120,7 +120,8 @@ async function searchCategory(category) {
       count: info.count,
       kind: info.kind,
       unit: price / info.count,
-      tradeId
+      tradeId,
+      category
     });
   }
   return rows;
@@ -266,8 +267,13 @@ async function collectOne(state) {
   const found = await searchCategory(category);
   state.categoryIndex = (index + 1) % categories.length;
   console.log(category + ': ' + found.length);
-  const kept = (state.listings || []).filter(row => row.category !== category);
   const now = Math.floor(Date.now() / 1000);
+  const maxAge = 2 * 60 * 60; // 2 horas (limpa itens fantasmas antigos)
+  const kept = (state.listings || []).filter(row => {
+    if (!row.category || row.category === category) return false;
+    if (row.seen && (now - row.seen > maxAge)) return false;
+    return true;
+  });
   const fresh = found.map(row => ({
     ...row,
     category,
