@@ -121,36 +121,37 @@ function createEmbed(boss, entry) {
   const px = primaryCoord[0];
   const py = primaryCoord[1];
   
-  const places = (entry.locations || [])
-    .slice(0, 4)
-    .map(pair => '`' + pair[0] + ' x ' + pair[1] + '`')
-    .join('  •  ') || 'Desconhecido';
-    
-  const label = String(entry.special_enemy_type).replace(/<br\s*\/?>/gi, ', ');
   const end = Number(entry.end_time);
   const directions = getDirections(px, py);
 
-  const fields = [
-    { name: '📍 Coordenadas', value: places, inline: true },
-    { name: '🧟 Inimigo', value: label, inline: true },
-    { name: '🧭 Rotas / Distâncias', value: directions, inline: false }
-  ];
-  if (end) {
-    fields.push({ name: '⏳ Tempo Restante', value: '<t:' + end + ':R> (<t:' + end + ':T>)', inline: false });
+  const locs = entry.locations || [];
+  let locationText = '';
+  if (locs.length <= 1) {
+    locationText = `📍 **Spawn em:** \`(${px}, ${py})\``;
+  } else {
+    locationText = `📍 **Spawns em:** ` + locs.map(p => `\`(${p[0]}, ${p[1]})\``).join(' • ');
   }
-  fields.push({ name: '🗺️ Mapa Interativo', value: '[Abrir Mapa no DFProfiler](https://www.dfprofiler.com/bossmap)', inline: false });
+
+  let desc = `**Atenção ${getMention()}!** Chefe especial ativo no mapa agora!\n\n`;
+  desc += `${locationText}\n`;
+  if (directions) {
+    desc += `🧭 **Rotas:**\n${directions}\n`;
+  }
+  if (end) {
+    desc += `⏳ **Tempo Restante:** <t:${end}:R> (<t:${end}:T>)\n`;
+  }
+  desc += `🗺️ [Abrir Mapa no DFProfiler](https://www.dfprofiler.com/bossmap)`;
 
   const spTime = new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
   return {
-    title: isPumpkin ? '🎃 ' + boss.toUpperCase() + ' DETECTADA!' : '🚨 ' + boss.toUpperCase() + ' DETECTADO!',
-    description: '**Atenção ' + getMention() + '!** Chefe especial ativo no mapa agora!',
+    title: isPumpkin ? `🎃 ${boss.toUpperCase()} DETECTADA!` : `🚨 ${boss.toUpperCase()} DETECTADO!`,
+    description: desc,
     color,
-    fields,
     image: {
       url: getMapImageUrl(px, py)
     },
-    footer: { text: 'DFProfiler Boss Alert • Detectado às ' + spTime + ' (Brasília)' },
+    footer: { text: `DFProfiler Boss Alert • Detectado às ${spTime} (Brasília)` },
     timestamp: new Date().toISOString()
   };
 }
