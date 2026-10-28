@@ -2,8 +2,13 @@ name: Boss Alert
 
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '0 */6 * * *'
   workflow_dispatch:
+    inputs:
+      test:
+        description: 'Enviar alerta de teste imediato'
+        required: false
+        default: 'true'
 
 concurrency:
   group: boss-alert
@@ -12,7 +17,7 @@ concurrency:
 jobs:
   alert:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
 
@@ -27,7 +32,16 @@ jobs:
           restore-keys: |
             boss-state-
 
-      - name: Procurar a Pumpkin Queen
+      - name: Monitorar Bosses em Tempo Real
         env:
-          BOSS_WEBHOOK_URL: ${{ secrets.BOSS_WEBHOOK_URL }}
-        run: node boss.js --loop
+          BOSS_WEBHOOK_URL: ${{ secrets.BOSS_WEBHOOK_URL || secrets.WEBHOOK_URL }}
+          BOSS_ROLE_ID: ${{ secrets.BOSS_ROLE_ID || vars.BOSS_ROLE_ID || '' }}
+          BOSSES: ${{ vars.BOSSES || 'Pumpkin Queen' }}
+          SCAN_MINUTES: '350'
+          IS_TEST: ${{ inputs.test }}
+        run: |
+          if [ "$IS_TEST" = "true" ]; then
+            node boss.js --loop --test
+          else
+            node boss.js --loop
+          fi
