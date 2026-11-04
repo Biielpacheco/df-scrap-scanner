@@ -57,40 +57,27 @@ function wanted(entry) {
   return bosses.find(boss => names.some(name => name.toLowerCase() === boss.toLowerCase())) || '';
 }
 
-function isEndGameRaid(entry) {
+function isRaid(entry) {
   if (!entry || !entry.special_enemy_type || entry.special_enemy_type === '0') return false;
   const loc = entry.locations && entry.locations[0];
-  if (!loc) return false;
-  const x = Number(loc[0]);
-  const y = Number(loc[1]);
-  if (!x || !y || x >= 2000) return false;
+  if (!loc || Number(loc[0]) >= 2000) return false;
 
-  // Proximidade de áreas End-Game (Bunker, North Entrance ou Ground Zero dentro de ~8 quarteirões)
-  const distBunker = Math.abs(x - 1057) + Math.abs(y - 1017);
-  const distGZ = Math.abs(x - 1054) + Math.abs(y - 987);
-  const distNorth = Math.abs(x - 1057) + Math.abs(y - 1021);
-  const isNearEndGame = distBunker <= 8 || distGZ <= 8 || distNorth <= 8;
-  if (!isNearEndGame) return false;
+  const raw = String(entry.special_enemy_type).toLowerCase();
+  if (
+    raw.includes('bandit') ||
+    raw.includes('scarecrow') ||
+    raw.includes('slenderman') ||
+    raw.includes('snowman') ||
+    raw.includes('tendril')
+  ) {
+    return false;
+  }
 
-  const rawText = String(entry.special_enemy_type).toLowerCase();
-  const isMultiEnemy = rawText.includes('<br') || rawText.includes('\n');
-  if (!isMultiEnemy) return false;
+  const isMulti = raw.includes('<br') || raw.includes('\n');
+  if (!isMulti) return false;
 
-  // Chefes fortes característicos de raid end-game
-  const strongKeywords = [
-    'mega titan',
-    'irradiated mother',
-    'irradiated wraith',
-    'charred titan',
-    'charred mother',
-    'charred wraith',
-    'mega mother',
-    'mega wraith',
-    'flaming charred titan',
-    'giant spider'
-  ];
-
-  return strongKeywords.some(kw => rawText.includes(kw));
+  const bossTypes = ['titan', 'mother', 'wraith', 'spider', 'bear', 'dreadstag', 'hound'];
+  return bossTypes.some(b => raw.includes(b));
 }
 
 async function loadMap() {
@@ -122,157 +109,58 @@ function getRaidMention() {
   return '@raids';
 }
 
-const outposts = [
-  { name: 'Bunker', x: 1057, y: 1017 },
-  { name: 'North Entrance', x: 1057, y: 1021 },
-  { name: 'Fort Pastor', x: 1029, y: 1003 },
-  { name: 'Dogg\'s Stockade', x: 1012, y: 1019 },
-  { name: 'Camp Valcrest', x: 1032, y: 985 },
-  { name: 'Precinct 13', x: 1005, y: 985 },
-  { name: 'Nastya\'s Holdout', x: 1000, y: 1000 },
-  { name: 'Ground Zero', x: 1054, y: 987 }
-];
-
-function getDirections(x, y) {
-  const sorted = outposts.map(op => {
-    const dx = x - op.x;
-    const dy = y - op.y;
-    const dist = Math.abs(dx) + Math.abs(dy);
-    let route = '';
-    if (dx < 0) route += Math.abs(dx) + 'L';
-    if (dx > 0) route += dx + 'R';
-    if (dy < 0) route += Math.abs(dy) + 'D';
-    if (dy > 0) route += dy + 'U';
-    if (!route) route = 'No';
-    return { name: op.name, dist, text: route + ' from ' + op.name + '.' };
-  }).sort((a, b) => a.dist - b.dist);
-
-  return sorted.slice(0, 2).map(s => s.text).join('\n');
+function formatLocations(entry) {
+  return (entry.locations || [])
+    .filter(p => Number(p[0]) < 2000)
+    .slice(0, 4)
+    .map(pair => pair[0] + ' x ' + pair[1])
+    .join('\n');
 }
 
-const updatedMapsPath = path.join(root, 'updated-maps.json');
-const updatedMaps = fs.existsSync(updatedMapsPath) ? new Set(JSON.parse(fs.readFileSync(updatedMapsPath, 'utf8'))) : new Set();
-
-function getMapImageUrl(x, y) {
-  const coord = x + 'x' + y;
-  if (updatedMaps.has(coord)) {
-    return 'https://raw.githubusercontent.com/luskrinha1/df-scrap-scanner/main/maps/Fairview_' + coord + '.webp';
-  }
-  return 'https://deadfrontier.info/map/Fairview_' + coord + '.png';
-}
-
-function createEmbed(boss, entry) {
-  const isPumpkin = /pumpkin/i.test(boss);
-  const color = isPumpkin ? 0xff7518 : 0x9b59b6;
-  const primaryCoord = (entry.locations && entry.locations[0]) || [1050, 986];
-  const px = Number(primaryCoord[0]);
-  const py = Number(primaryCoord[1]);
-  
+function bossMessage(boss, entry) {
+  const places = formatLocations(entry);
+  const label = String(entry.special_enemy_type).replace(/<br\s*\/?>/gi, ', ');
   const end = Number(entry.end_time);
-  const directions = getDirections(px, py);
-
-  const locs = entry.locations || [];
-  let locationText = '';
-  if (locs.length <= 1) {
-    locationText = `📍 **Spawn em:** \`(${px}, ${py})\``;
-  } else {
-    locationText = `📍 **Spawns em:** ` + locs.map(p => `\`(${p[0]}, ${p[1]})\``).join(' • ');
-  }
-
-  let desc = `**Atenção ${getMention()}!** Chefe especial ativo no mapa agora!\n\n`;
-  desc += `${locationText}\n`;
-  if (directions) {
-    desc += `🧭 **Rotas:**\n${directions}\n`;
-  }
-  if (end) {
-    desc += `⏳ **Tempo Restante:** <t:${end}:R> (<t:${end}:T>)\n`;
-  }
-  desc += `🗺️ [Abrir Mapa no DFProfiler](https://www.dfprofiler.com/bossmap)`;
-
-  const spTime = new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-  return {
-    title: isPumpkin ? `🎃 ${boss.toUpperCase()} DETECTADA!` : `🚨 ${boss.toUpperCase()} DETECTADO!`,
-    description: desc,
-    color,
-    image: {
-      url: getMapImageUrl(px, py)
-    },
-    footer: { text: `DFProfiler Boss Alert • Detectado às ${spTime} (Brasília)` },
-    timestamp: new Date().toISOString()
-  };
+  const mention = getMention();
+  return [
+    '**' + boss + ' Alert** ' + mention,
+    label + ' apareceu',
+    places,
+    'https://www.dfprofiler.com/bossmap',
+    end ? 'Termina <t:' + end + ':R>' : ''
+  ].filter(Boolean).join('\n');
 }
 
-function createRaidEmbed(entry) {
-  const primaryCoord = (entry.locations && entry.locations[0]) || [1053, 1016];
-  const px = Number(primaryCoord[0]);
-  const py = Number(primaryCoord[1]);
-  const end = Number(entry.end_time);
-  const directions = getDirections(px, py);
-
-  const rawLines = String(entry.special_enemy_type || '')
+function raidMessage(entry) {
+  const places = formatLocations(entry);
+  const enemies = String(entry.special_enemy_type || '')
     .replace(/<br\s*\/?>/gi, '\n')
     .split('\n')
-    .map(l => l.trim())
-    .filter(Boolean);
-
-  const enemyList = rawLines.map(e => `• **${e}**`).join('\n') || 'Inimigos desconhecidos';
-
-  let desc = `**Atenção ${getRaidMention()}!** Raid de chefes fortes ativa no mapa agora!\n\n`;
-  desc += `📍 **Localização:** \`(${px}, ${py})\`\n`;
-  if (directions) {
-    desc += `🧭 **Rotas:**\n${directions}\n\n`;
-  }
-  desc += `💀 **Chefes na Raid:**\n${enemyList}\n\n`;
-  if (end) {
-    desc += `⏳ **Tempo Restante:** <t:${end}:R> (<t:${end}:T>)\n`;
-  }
-  desc += `🗺️ [Abrir Mapa no DFProfiler](https://www.dfprofiler.com/bossmap)`;
-
-  const spTime = new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-  return {
-    title: '💀 RAID END-GAME DETECTADA (BUNKER / GROUND ZERO)!',
-    description: desc,
-    color: 0xb30000,
-    image: {
-      url: getMapImageUrl(px, py)
-    },
-    footer: { text: `DFProfiler Raid Alert • Detectado às ${spTime} (Brasília)` },
-    timestamp: new Date().toISOString()
-  };
+    .map(s => s.trim())
+    .filter(Boolean)
+    .join('\n');
+  const end = Number(entry.end_time);
+  const mention = getRaidMention();
+  return [
+    '**Raid Alert** ' + mention,
+    enemies,
+    places,
+    'https://www.dfprofiler.com/bossmap',
+    end ? 'Termina <t:' + end + ':R>' : ''
+  ].filter(Boolean).join('\n');
 }
 
-async function publish(boss, entry) {
-  const embed = createEmbed(boss, entry);
-  const mention = getMention();
+async function publish(content) {
   const response = await fetch(config.bossWebhookUrl.trim(), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       username: 'Boss Alert',
-      content: mention,
-      embeds: [embed],
+      content,
       allowed_mentions: { parse: ['roles', 'everyone'] }
     })
   });
-  if (!response.ok) throw new Error('Discord recusou o webhook de boss: ' + response.statusText);
-}
-
-async function publishRaid(entry) {
-  const embed = createRaidEmbed(entry);
-  const mention = getRaidMention();
-  const response = await fetch(config.bossWebhookUrl.trim(), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      username: 'Raid Alert',
-      content: mention,
-      embeds: [embed],
-      allowed_mentions: { parse: ['roles', 'everyone'] }
-    })
-  });
-  if (!response.ok) throw new Error('Discord recusou o webhook de raid: ' + response.statusText);
+  if (!response.ok) throw new Error('Discord recusou o webhook: ' + response.statusText);
 }
 
 async function checkBosses(state) {
@@ -285,28 +173,30 @@ async function checkBosses(state) {
 
     const boss = wanted(entry);
     if (boss) {
+      const content = bossMessage(boss, entry);
       if (preview) {
-        console.log('--- ALERTA DE BOSS (PREVIEW) ---');
-        console.log(JSON.stringify(createEmbed(boss, entry), null, 2));
+        console.log('--- ALERTA BOSS (PREVIEW) ---');
+        console.log(content);
       } else {
-        await publish(boss, entry);
+        await publish(content);
       }
       sent.add(entry.event_id);
       posted += 1;
-      console.log(`[ALERTA ENVIADO] Boss: ${boss} (ID do Evento: ${entry.event_id})`);
+      console.log(`[ALERTA ENVIADO] Boss: ${boss} (ID: ${entry.event_id})`);
       continue;
     }
 
-    if (isEndGameRaid(entry)) {
+    if (isRaid(entry)) {
+      const content = raidMessage(entry);
       if (preview) {
-        console.log('--- ALERTA DE RAID (PREVIEW) ---');
-        console.log(JSON.stringify(createRaidEmbed(entry), null, 2));
+        console.log('--- ALERTA RAID (PREVIEW) ---');
+        console.log(content);
       } else {
-        await publishRaid(entry);
+        await publish(content);
       }
       sent.add(entry.event_id);
       posted += 1;
-      console.log(`[ALERTA ENVIADO] Raid End-Game em (${entry.locations?.[0]}) (ID: ${entry.event_id})`);
+      console.log(`[ALERTA ENVIADO] Raid em (${entry.locations?.[0]}) (ID: ${entry.event_id})`);
       continue;
     }
   }
@@ -325,27 +215,19 @@ async function main() {
 
   if (test) {
     console.log('Enviando alerta de teste para o Discord...');
-    const testEntry = {
-      event_id: 'test_boss_' + Date.now(),
-      special_enemy_type: '1 x Pumpkin Queen (Teste de Configuração)',
-      locations: [[1050, 986]],
-      end_time: Math.floor(Date.now() / 1000) + 1800
-    };
     const testRaidEntry = {
       event_id: 'test_raid_' + Date.now(),
       special_enemy_type: '1 x Irradiated Mother<br />1 x Irradiated Wraith<br />1 x Mega Titan<br />2 x Mega Mother<br />2 x Mega Wraith<br />1 x Charred Wraith',
       locations: [[1053, 1016]],
       end_time: Math.floor(Date.now() / 1000) + 3600
     };
+    const content = raidMessage(testRaidEntry);
     if (preview) {
-      console.log('--- PREVIEW DO TESTE BOSS ---');
-      console.log(JSON.stringify(createEmbed('Pumpkin Queen', testEntry), null, 2));
       console.log('--- PREVIEW DO TESTE RAID ---');
-      console.log(JSON.stringify(createRaidEmbed(testRaidEntry), null, 2));
+      console.log(content);
     } else {
-      await publish('Pumpkin Queen', testEntry);
-      await publishRaid(testRaidEntry);
-      console.log('Alertas de teste enviados com sucesso!');
+      await publish(content);
+      console.log('Alerta de teste enviado com sucesso!');
     }
     if (!loop) return;
   }
