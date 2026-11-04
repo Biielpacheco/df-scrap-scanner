@@ -196,33 +196,13 @@ function consolidatedRaidMessage(raids) {
   const end = raids.map(r => Number(r.end_time)).filter(Boolean)[0] || 0;
   const timerText = end ? `⏳ **Termina <t:${end}:R>** (<t:${end}:T>)` : '';
 
-  const header = [
+  return [
     '**Raid Alert** ' + mention,
     '⚠️ **Novas Raids (Ninhos de Boss) ativas no mapa:**',
-    timerText
-  ].filter(Boolean).join('\n');
-
-  const enemyBullets = [];
-  for (const r of raids) {
-    const enemies = String(r.special_enemy_type || '')
-      .replace(/<br\s*\/?>/gi, '\n')
-      .split('\n')
-      .map(s => s.trim())
-      .filter(Boolean)
-      .join(', ');
-
-    if (enemies) {
-      enemyBullets.push('• ' + enemies);
-    }
-  }
-
-  return [
-    header,
-    '',
-    enemyBullets.join('\n'),
+    timerText,
     '',
     '<https://www.dfprofiler.com/bossmap>'
-  ].join('\n');
+  ].filter(Boolean).join('\n');
 }
 
 async function publishEmbed(embed) {
