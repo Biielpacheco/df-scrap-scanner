@@ -193,33 +193,36 @@ function createBossEmbed(boss, entry) {
 
 function consolidatedRaidMessage(raids) {
   const mention = getRaidMention();
-  const lines = [
+  const end = raids.map(r => Number(r.end_time)).filter(Boolean)[0] || 0;
+  const timerText = end ? `⏳ **Termina <t:${end}:R>** (<t:${end}:T>)` : '';
+
+  const header = [
     '**Raid Alert** ' + mention,
     '⚠️ **Novas Raids (Ninhos de Boss) ativas no mapa:**',
-    ''
-  ];
+    timerText
+  ].filter(Boolean).join('\n');
 
+  const enemyBullets = [];
   for (const r of raids) {
-    const loc = (r.locations || [])
-      .filter(p => Number(p[0]) < 2000)
-      .slice(0, 3)
-      .map(p => p[0] + ' x ' + p[1])
-      .join(' • ');
     const enemies = String(r.special_enemy_type || '')
       .replace(/<br\s*\/?>/gi, '\n')
       .split('\n')
       .map(s => s.trim())
       .filter(Boolean)
       .join(', ');
-    const end = Number(r.end_time);
 
-    lines.push('📍 `' + loc + '`' + (end ? ' (Termina <t:' + end + ':R>)' : ''));
-    lines.push('↳ ' + enemies);
-    lines.push('');
+    if (enemies) {
+      enemyBullets.push('• ' + enemies);
+    }
   }
 
-  lines.push('<https://www.dfprofiler.com/bossmap>');
-  return lines.join('\n');
+  return [
+    header,
+    '',
+    enemyBullets.join('\n'),
+    '',
+    '<https://www.dfprofiler.com/bossmap>'
+  ].join('\n');
 }
 
 async function publishEmbed(embed) {
