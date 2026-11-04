@@ -214,20 +214,30 @@ async function main() {
   const state = loadState();
 
   if (test) {
-    console.log('Enviando alerta de teste para o Discord...');
+    console.log('Enviando alertas de teste para o Discord...');
+    const testBossEntry = {
+      event_id: 'test_boss_' + Date.now(),
+      special_enemy_type: '1 x Pumpkin Queen',
+      locations: [[1056, 990]],
+      end_time: Math.floor(Date.now() / 1000) + 1800
+    };
     const testRaidEntry = {
       event_id: 'test_raid_' + Date.now(),
       special_enemy_type: '1 x Irradiated Mother<br />1 x Irradiated Wraith<br />1 x Mega Titan<br />2 x Mega Mother<br />2 x Mega Wraith<br />1 x Charred Wraith',
       locations: [[1053, 1016]],
       end_time: Math.floor(Date.now() / 1000) + 3600
     };
-    const content = raidMessage(testRaidEntry);
+    const bossContent = bossMessage('Pumpkin Queen', testBossEntry);
+    const raidContent = raidMessage(testRaidEntry);
     if (preview) {
-      console.log('--- PREVIEW DO TESTE RAID ---');
-      console.log(content);
+      console.log('--- PREVIEW TESTE BOSS ---');
+      console.log(bossContent);
+      console.log('--- PREVIEW TESTE RAID ---');
+      console.log(raidContent);
     } else {
-      await publish(content);
-      console.log('Alerta de teste enviado com sucesso!');
+      await publish(bossContent);
+      await publish(raidContent);
+      console.log('Alertas de teste enviados com sucesso!');
     }
     if (!loop) return;
   }
