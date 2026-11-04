@@ -6,17 +6,20 @@ const configPath = path.join(root, 'config.json');
 const config = {
   bossWebhookUrl: process.env.BOSS_WEBHOOK_URL || '',
   bossRoleId: process.env.BOSS_ROLE_ID || '',
-  raidRoleId: process.env.RAID_ROLE_ID || ''
+  raidRoleId: process.env.RAID_ROLE_ID || '',
+  banditRoleId: process.env.BANDIT_ROLE_ID || ''
 };
 if (fs.existsSync(configPath)) {
   const saved = JSON.parse(fs.readFileSync(configPath, 'utf8'));
   if (saved.bossWebhookUrl) config.bossWebhookUrl = saved.bossWebhookUrl;
   if (saved.bossRoleId) config.bossRoleId = saved.bossRoleId;
   if (saved.raidRoleId) config.raidRoleId = saved.raidRoleId;
+  if (saved.banditRoleId) config.banditRoleId = saved.banditRoleId;
 }
 if (process.env.BOSS_WEBHOOK_URL) config.bossWebhookUrl = process.env.BOSS_WEBHOOK_URL;
 if (process.env.BOSS_ROLE_ID) config.bossRoleId = process.env.BOSS_ROLE_ID;
 if (process.env.RAID_ROLE_ID) config.raidRoleId = process.env.RAID_ROLE_ID;
+if (process.env.BANDIT_ROLE_ID) config.banditRoleId = process.env.BANDIT_ROLE_ID;
 
 const bosses = (process.env.BOSSES || 'Pumpkin Queen')
   .split(',')
@@ -55,6 +58,12 @@ function enemyNames(entry) {
 function wanted(entry) {
   const names = enemyNames(entry);
   return bosses.find(boss => names.some(name => name.toLowerCase() === boss.toLowerCase())) || '';
+}
+
+function is8Bandits(entry) {
+  if (!entry || !entry.special_enemy_type || entry.special_enemy_type === '0') return false;
+  const raw = String(entry.special_enemy_type).toLowerCase();
+  return /8\s*x\s*bandit/i.test(raw);
 }
 
 function isRaid(entry) {
@@ -110,6 +119,12 @@ function getRaidMention() {
   return '@raids';
 }
 
+function getBanditMention() {
+  const banditId = String(config.banditRoleId || '').trim();
+  if (banditId) return `<@&${banditId}>`;
+  return '@everyone';
+}
+
 const outposts = [
   { name: 'Bunker', x: 1057, y: 1017 },
   { name: 'North Entrance', x: 1057, y: 1021 },
@@ -159,7 +174,7 @@ function createBossEmbed(boss, entry) {
   const end = Number(entry.end_time);
   const directions = getDirections(px, py);
 
-  const locs = entry.locations || [];
+  const locs = (entry.locations || []).filter(p => Number(p[0]) < 2000);
   let locationText = '';
   if (locs.length <= 1) {
     locationText = `📍 **Spawn em:** \`(${px}, ${py})\``;
@@ -187,6 +202,46 @@ function createBossEmbed(boss, entry) {
       url: getMapImageUrl(px, py)
     },
     footer: { text: `DFProfiler Boss Alert • Detectado às ${spTime} (Brasília)` },
+    timestamp: new Date().toISOString()
+  };
+}
+
+function createBanditEmbed(entry) {
+  const primaryCoord = (entry.locations && entry.locations[0]) || [1055, 988];
+  const px = Number(primaryCoord[0]);
+  const py = Number(primaryCoord[1]);
+  
+  const end = Number(entry.end_time);
+  const directions = getDirections(px, py);
+
+  const locs = (entry.locations || []).filter(p => Number(p[0]) < 2000);
+  let locationText = '';
+  if (locs.length <= 1) {
+    locationText = `📍 **Spawn em:** \`(${px}, ${py})\``;
+  } else {
+    locationText = `📍 **Spawns em:** ` + locs.map(p => `\`(${p[0]}, ${p[1]})\``).join(' • ');
+  }
+
+  let desc = `**Atenção ${getBanditMention()}!** Evento raro de **8 x Bandits** ativo no mapa agora!\n\n`;
+  desc += `${locationText}\n`;
+  if (directions) {
+    desc += `🧭 **Rotas:**\n${directions}\n`;
+  }
+  if (end) {
+    desc += `⏳ **Tempo Restante:** <t:${end}:R> (<t:${end}:T>)\n`;
+  }
+  desc += `🗺️ [Abrir Mapa no DFProfiler](https://www.dfprofiler.com/bossmap)`;
+
+  const spTime = new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+  return {
+    title: '🏴‍☠️ 8 x BANDITS DETECTADOS!',
+    description: desc,
+    color: 0xc0392b,
+    image: {
+      url: getMapImageUrl(px, py)
+    },
+    footer: { text: `DFProfiler Bandit Alert • Detectado às ${spTime} (Brasília)` },
     timestamp: new Date().toISOString()
   };
 }
@@ -220,6 +275,22 @@ async function publishEmbed(embed) {
   if (!response.ok) throw new Error('Discord recusou o webhook do boss: ' + response.statusText);
 }
 
+async function publishBandits(entry) {
+  const embed = createBanditEmbed(entry);
+  const mention = getBanditMention();
+  const response = await fetch(config.bossWebhookUrl.trim(), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      username: 'Bandit Alert',
+      content: mention,
+      embeds: [embed],
+      allowed_mentions: { parse: ['roles', 'everyone'] }
+    })
+  });
+  if (!response.ok) throw new Error('Discord recusou o webhook dos bandidos: ' + response.statusText);
+}
+
 async function publishText(content) {
   const response = await fetch(config.bossWebhookUrl.trim(), {
     method: 'POST',
@@ -243,6 +314,7 @@ async function checkBosses(state) {
     if (!entry || entry.ended === '1') continue;
     if (!entry.event_id || sent.has(entry.event_id)) continue;
 
+    // 1. Solo Wanted Bosses (Pumpkin Queen)
     const boss = wanted(entry);
     if (boss) {
       const embed = createBossEmbed(boss, entry);
@@ -258,6 +330,21 @@ async function checkBosses(state) {
       continue;
     }
 
+    // 2. Evento Especial de 8 x Bandits
+    if (is8Bandits(entry)) {
+      if (preview) {
+        console.log('--- ALERTA 8 BANDITS (PREVIEW) ---');
+        console.log(JSON.stringify(createBanditEmbed(entry), null, 2));
+      } else {
+        await publishBandits(entry);
+      }
+      sent.add(entry.event_id);
+      posted += 1;
+      console.log(`[ALERTA ENVIADO] 8 x Bandits (ID: ${entry.event_id})`);
+      continue;
+    }
+
+    // 3. Raids normais do ciclo
     if (isRaid(entry)) {
       newRaids.push(entry);
       sent.add(entry.event_id);
@@ -290,49 +377,25 @@ async function main() {
   const state = loadState();
 
   if (test) {
-    console.log('Enviando alertas de teste para o Discord...');
-    const testBossEntry = {
-      event_id: 'test_boss_' + Date.now(),
-      special_enemy_type: '1 x Pumpkin Queen (Teste de Configuração)',
-      locations: [[1050, 986]],
-      end_time: Math.floor(Date.now() / 1000) + 1800
+    console.log('Enviando alerta de teste de 8 Bandits para o Discord...');
+    const testBanditEntry = {
+      event_id: 'test_bandit_' + Date.now(),
+      special_enemy_type: '8 x Bandits (Teste de Configuração)',
+      locations: [[1055, 988]],
+      end_time: Math.floor(Date.now() / 1000) + 10800
     };
-    const testRaids = [
-      {
-        event_id: 'test_raid_1',
-        special_enemy_type: '1 x Irradiated Mother<br />1 x Mega Titan<br />2 x Mega Mother<br />1 x Charred Wraith',
-        locations: [[1053, 1016]],
-        end_time: Math.floor(Date.now() / 1000) + 3600
-      },
-      {
-        event_id: 'test_raid_2',
-        special_enemy_type: '1 x Flaming Titan<br />1 x Flaming Mother<br />2 x Flaming Giant Spider<br />1 x Flaming Charred Titan',
-        locations: [[1058, 989]],
-        end_time: Math.floor(Date.now() / 1000) + 3600
-      },
-      {
-        event_id: 'test_raid_3',
-        special_enemy_type: '2 x Titan<br />2 x Mother<br />1 x Wraith',
-        locations: [[1029, 1000]],
-        end_time: Math.floor(Date.now() / 1000) + 3600
-      }
-    ];
-
     if (preview) {
-      console.log('--- PREVIEW TESTE BOSS EMBED ---');
-      console.log(JSON.stringify(createBossEmbed('Pumpkin Queen', testBossEntry), null, 2));
-      console.log('--- PREVIEW TESTE RAIDS CONSOLIDADO ---');
-      console.log(consolidatedRaidMessage(testRaids));
+      console.log('--- PREVIEW TESTE 8 BANDITS ---');
+      console.log(JSON.stringify(createBanditEmbed(testBanditEntry), null, 2));
     } else {
-      await publishEmbed(createBossEmbed('Pumpkin Queen', testBossEntry));
-      await publishText(consolidatedRaidMessage(testRaids));
-      console.log('Alertas de teste enviados com sucesso!');
+      await publishBandits(testBanditEntry);
+      console.log('Alerta de teste de 8 Bandits enviado com sucesso!');
     }
     if (!loop) return;
   }
   
   if (loop) {
-    console.log('Iniciando Vigia Contínuo de Bosses e Raids (checagem a cada 45 segundos)...');
+    console.log('Iniciando Vigia Contínuo de Bosses, Bandits e Raids (checagem a cada 45 segundos)...');
     const minutes = Math.max(1, Number(process.env.SCAN_MINUTES) || 350);
     const end = Date.now() + minutes * 60 * 1000;
     while (Date.now() < end) {
@@ -350,7 +413,7 @@ async function main() {
   }
   
   const posted = await checkBosses(state);
-  console.log(posted ? 'Avisos enviados: ' + posted : 'Nenhum boss ou raid ativa no momento.');
+  console.log(posted ? 'Avisos enviados: ' + posted : 'Nenhum boss, bandit ou raid ativa no momento.');
 }
 
 main().catch(error => {
