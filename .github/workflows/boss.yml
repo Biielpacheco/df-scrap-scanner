@@ -32,10 +32,11 @@ jobs:
           restore-keys: |
             boss-state-
 
-      - name: Monitorar Bosses em Tempo Real
+      - name: Monitorar Bosses e Raids em Tempo Real
         env:
           BOSS_WEBHOOK_URL: ${{ secrets.BOSS_WEBHOOK_URL || secrets.WEBHOOK_URL }}
           BOSS_ROLE_ID: ${{ secrets.BOSS_ROLE_ID || vars.BOSS_ROLE_ID || '' }}
+          RAID_ROLE_ID: ${{ secrets.RAID_ROLE_ID || vars.RAID_ROLE_ID || '' }}
           BOSSES: ${{ vars.BOSSES || 'Pumpkin Queen' }}
           SCAN_MINUTES: '350'
           IS_TEST: ${{ inputs.test }}
