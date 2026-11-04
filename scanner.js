@@ -20,14 +20,14 @@ const once = process.argv.includes('--once');
 const loop = process.argv.includes('--loop');
 
 const categories = [
+  'weapon_heavymachinegun',
   'weapon_melee',
-  'weapon_pistol',
   'weapon_rifle',
+  'weapon_pistol',
   'weapon_shotgun',
   'weapon_lightmachinegun',
-  'weapon_heavymachinegun',
-  'weapon_grenadelauncher',
-  'armour'
+  'armour',
+  'weapon_grenadelauncher'
 ];
 
 function sleep(ms) {
@@ -120,7 +120,8 @@ async function searchCategory(category) {
       count: info.count,
       kind: info.kind,
       unit: price / info.count,
-      tradeId
+      tradeId,
+      category
     });
   }
   return rows;
@@ -153,6 +154,12 @@ function cheapest(rows, kind, singles) {
     .filter(row => row.kind === kind && (!singles || row.count === 1))
     .sort((a, b) => a.unit - b.unit || a.price - b.price)
     .slice(0, config.lines || 10);
+}
+
+function getRareFingerprint(rows) {
+  const rares = cheapest(rows, 'rare', false).map(r => r.tradeId + ':' + r.price).join('|');
+  const singles = cheapest(rows, 'rare', true).map(r => r.tradeId + ':' + r.price).join('|');
+  return rares + '#' + singles;
 }
 
 function line(row) {
@@ -260,8 +267,13 @@ async function collectOne(state) {
   const found = await searchCategory(category);
   state.categoryIndex = (index + 1) % categories.length;
   console.log(category + ': ' + found.length);
-  const kept = (state.listings || []).filter(row => row.category !== category);
   const now = Math.floor(Date.now() / 1000);
+  const maxAge = 2 * 60 * 60; // 2 horas (limpa itens fantasmas antigos)
+  const kept = (state.listings || []).filter(row => {
+    if (!row.category || row.category === category) return false;
+    if (row.seen && (now - row.seen > maxAge)) return false;
+    return true;
+  });
   const fresh = found.map(row => ({
     ...row,
     category,
@@ -274,7 +286,7 @@ async function scan(state) {
   if (Date.now() < nextAllowed) return;
   let rows;
   try {
-    if (once || loop) {
+    if (loop) {
       rows = await collectOne(state);
     } else {
       console.log('Consultando o mercado...');
@@ -292,17 +304,28 @@ async function scan(state) {
     return;
   }
   stamp(rows, state);
+  const oldFp = state.lastRareFp || '';
+  const newFp = getRareFingerprint(rows);
+  if (oldFp && oldFp !== newFp) {
+    console.log('⚡ Alteração em Rare Metal Scrap detectada! Prioridade atualizada.');
+  }
+  state.lastRareFp = newFp;
   const rare = 0xf1c40f;
   const uncommon = 0x2ecc71;
   const common = 0x95a5a6;
   const embeds = [
-    section('Top Cheapest Rare Metal Scrap:', cheapest(rows, 'rare', false), rare),
-    section('Top Cheapest Rare Metal Scrap Single:', cheapest(rows, 'rare', true), rare),
+    section('⚡ Top Cheapest Rare Metal Scrap [Prioridade]:', cheapest(rows, 'rare', false), rare),
+    section('⚡ Top Cheapest Rare Metal Scrap Single [Prioridade]:', cheapest(rows, 'rare', true), rare),
     section('Top Cheapest Uncommon Metal Scrap:', cheapest(rows, 'uncommon', false), uncommon),
     section('Top Cheapest Uncommon Metal Scrap Single:', cheapest(rows, 'uncommon', true), uncommon),
     section('Top Cheapest Metal Scrap:', cheapest(rows, 'common', false), common),
     section('Top Cheapest Metal Scrap Single:', cheapest(rows, 'common', true), common)
   ];
+  const spTime = new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  embeds[embeds.length - 1].footer = {
+    text: `⚡ Prioridade Rare Scrap Ativa • Atualizado às ${spTime} (Brasília)`
+  };
+  embeds[embeds.length - 1].timestamp = new Date().toISOString();
   if (preview) {
     for (const embed of embeds) {
       console.log('\n' + embed.title + '\n' + embed.description);
