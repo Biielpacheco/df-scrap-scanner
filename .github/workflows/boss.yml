@@ -36,9 +36,10 @@ jobs:
         env:
           BOSS_WEBHOOK_URL: ${{ secrets.BOSS_WEBHOOK_URL || secrets.WEBHOOK_URL }}
           BOSS_ROLE_ID: ${{ secrets.BOSS_ROLE_ID || vars.BOSS_ROLE_ID || '' }}
+          DEVIL_ROLE_ID: ${{ secrets.DEVIL_ROLE_ID || vars.DEVIL_ROLE_ID || '' }}
           RAID_ROLE_ID: ${{ secrets.RAID_ROLE_ID || vars.RAID_ROLE_ID || '' }}
           BANDIT_ROLE_ID: ${{ secrets.BANDIT_ROLE_ID || vars.BANDIT_ROLE_ID || '' }}
-          BOSSES: ${{ vars.BOSSES || 'Pumpkin Queen' }}
+          BOSSES: ${{ vars.BOSSES || 'Pumpkin Queen,Devil Hound' }}
           SCAN_MINUTES: '350'
           IS_TEST: ${{ inputs.test }}
         run: |
