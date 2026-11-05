@@ -6,6 +6,7 @@ const configPath = path.join(root, 'config.json');
 const config = {
   bossWebhookUrl: process.env.BOSS_WEBHOOK_URL || '',
   bossRoleId: process.env.BOSS_ROLE_ID || '',
+  devilRoleId: process.env.DEVIL_ROLE_ID || '',
   raidRoleId: process.env.RAID_ROLE_ID || '',
   banditRoleId: process.env.BANDIT_ROLE_ID || ''
 };
@@ -13,15 +14,17 @@ if (fs.existsSync(configPath)) {
   const saved = JSON.parse(fs.readFileSync(configPath, 'utf8'));
   if (saved.bossWebhookUrl) config.bossWebhookUrl = saved.bossWebhookUrl;
   if (saved.bossRoleId) config.bossRoleId = saved.bossRoleId;
+  if (saved.devilRoleId) config.devilRoleId = saved.devilRoleId;
   if (saved.raidRoleId) config.raidRoleId = saved.raidRoleId;
   if (saved.banditRoleId) config.banditRoleId = saved.banditRoleId;
 }
 if (process.env.BOSS_WEBHOOK_URL) config.bossWebhookUrl = process.env.BOSS_WEBHOOK_URL;
 if (process.env.BOSS_ROLE_ID) config.bossRoleId = process.env.BOSS_ROLE_ID;
+if (process.env.DEVIL_ROLE_ID) config.devilRoleId = process.env.DEVIL_ROLE_ID;
 if (process.env.RAID_ROLE_ID) config.raidRoleId = process.env.RAID_ROLE_ID;
 if (process.env.BANDIT_ROLE_ID) config.banditRoleId = process.env.BANDIT_ROLE_ID;
 
-const bosses = (process.env.BOSSES || 'Pumpkin Queen')
+const bosses = (process.env.BOSSES || 'Pumpkin Queen,Devil Hound')
   .split(',')
   .map(name => name.trim())
   .filter(Boolean);
@@ -105,7 +108,11 @@ async function loadMap() {
   return JSON.parse(text);
 }
 
-function getMention() {
+function getMention(boss) {
+  if (boss && /devil/i.test(boss)) {
+    const devilId = String(config.devilRoleId || '').trim();
+    if (devilId) return `<@&${devilId}>`;
+  }
   const roleId = String(config.bossRoleId || '').trim();
   if (roleId) return `<@&${roleId}>`;
   return '@everyone';
@@ -166,7 +173,11 @@ function getMapImageUrl(x, y) {
 
 function createBossEmbed(boss, entry) {
   const isPumpkin = /pumpkin/i.test(boss);
-  const color = isPumpkin ? 0xff7518 : 0x9b59b6;
+  const isDevil = /devil/i.test(boss);
+  let color = 0x9b59b6;
+  if (isPumpkin) color = 0xff7518;
+  if (isDevil) color = 0xb00020; // Vermelho Sangue / Red Crimson
+  
   const primaryCoord = (entry.locations && entry.locations[0]) || [1050, 986];
   const px = Number(primaryCoord[0]);
   const py = Number(primaryCoord[1]);
@@ -182,7 +193,11 @@ function createBossEmbed(boss, entry) {
     locationText = `📍 **Spawns em:** ` + locs.map(p => `\`(${p[0]}, ${p[1]})\``).join(' • ');
   }
 
-  let desc = `**Atenção ${getMention()}!** Chefe especial ativo no mapa agora!\n\n`;
+  let emoji = '🚨';
+  if (isPumpkin) emoji = '🎃';
+  if (isDevil) emoji = '🐺';
+
+  let desc = `**Atenção ${getMention(boss)}!** Chefe especial ativo no mapa agora!\n\n`;
   desc += `${locationText}\n`;
   if (directions) {
     desc += `🧭 **Rotas:**\n${directions}\n`;
@@ -195,7 +210,7 @@ function createBossEmbed(boss, entry) {
   const spTime = new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
   return {
-    title: isPumpkin ? `🎃 ${boss.toUpperCase()} DETECTADA!` : `🚨 ${boss.toUpperCase()} DETECTADO!`,
+    title: `${emoji} ${boss.toUpperCase()} DETECTADO!`,
     description: desc,
     color,
     image: {
@@ -260,14 +275,14 @@ function consolidatedRaidMessage(raids) {
   ].filter(Boolean).join('\n');
 }
 
-async function publishEmbed(embed) {
-  const mention = getMention();
+async function publishEmbed(embed, mention) {
+  const content = mention || getMention();
   const response = await fetch(config.bossWebhookUrl.trim(), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       username: 'Boss Alert',
-      content: mention,
+      content,
       embeds: [embed],
       allowed_mentions: { parse: ['roles', 'everyone'] }
     })
@@ -314,7 +329,7 @@ async function checkBosses(state) {
     if (!entry || entry.ended === '1') continue;
     if (!entry.event_id || sent.has(entry.event_id)) continue;
 
-    // 1. Solo Wanted Bosses (Pumpkin Queen)
+    // 1. Solo Wanted Bosses (Pumpkin Queen, Devil Hound, etc.)
     const boss = wanted(entry);
     if (boss) {
       const embed = createBossEmbed(boss, entry);
@@ -322,7 +337,7 @@ async function checkBosses(state) {
         console.log('--- ALERTA BOSS (PREVIEW) ---');
         console.log(JSON.stringify(embed, null, 2));
       } else {
-        await publishEmbed(embed);
+        await publishEmbed(embed, getMention(boss));
       }
       sent.add(entry.event_id);
       posted += 1;
@@ -377,19 +392,19 @@ async function main() {
   const state = loadState();
 
   if (test) {
-    console.log('Enviando alerta de teste de 8 Bandits para o Discord...');
-    const testBanditEntry = {
-      event_id: 'test_bandit_' + Date.now(),
-      special_enemy_type: '8 x Bandits (Teste de Configuração)',
-      locations: [[1055, 988]],
-      end_time: Math.floor(Date.now() / 1000) + 10800
+    console.log('Enviando alerta de teste de Devil Hound para o Discord...');
+    const testDevilEntry = {
+      event_id: 'test_devil_' + Date.now(),
+      special_enemy_type: '1 x Devil Hound (Teste de Configuração)',
+      locations: [[1050, 991]],
+      end_time: Math.floor(Date.now() / 1000) + 8640
     };
     if (preview) {
-      console.log('--- PREVIEW TESTE 8 BANDITS ---');
-      console.log(JSON.stringify(createBanditEmbed(testBanditEntry), null, 2));
+      console.log('--- PREVIEW TESTE DEVIL HOUND ---');
+      console.log(JSON.stringify(createBossEmbed('Devil Hound', testDevilEntry), null, 2));
     } else {
-      await publishBandits(testBanditEntry);
-      console.log('Alerta de teste de 8 Bandits enviado com sucesso!');
+      await publishEmbed(createBossEmbed('Devil Hound', testDevilEntry), getMention('Devil Hound'));
+      console.log('Alerta de teste do Devil Hound enviado com sucesso!');
     }
     if (!loop) return;
   }
