@@ -59,6 +59,10 @@ function enemyNames(entry) {
 }
 
 function wanted(entry) {
+  // Ignora raids/grupos com multiplos monstros divididos por <br> ou quebra de linha
+  const raw = String(entry.special_enemy_type || '');
+  if (raw.includes('<br') || raw.includes('\n')) return '';
+
   const names = enemyNames(entry);
   return bosses.find(boss => names.some(name => name.toLowerCase() === boss.toLowerCase())) || '';
 }
